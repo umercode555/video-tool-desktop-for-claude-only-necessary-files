@@ -1,0 +1,25 @@
+{
+  "name": "hook-showcase",
+  "version": "1.0.0",
+  "description": "HOOK & SHOWCASE desktop app",
+  "main": "main.js",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "dist:mac": "electron-builder --mac --x64"
+  },
+  "devDependencies": {
+    "electron": "^32.0.0",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.hookshowcase.app",
+    "productName": "HOOK & SHOWCASE",
+    "directories": { "output": "dist" },
+    "files": ["main.js", "app/**/*"],
+    "mac": {
+      "target": [{ "target": "dmg", "arch": ["x64"] }],
+      "category": "public.app-category.video"
+    }
+  }
+}

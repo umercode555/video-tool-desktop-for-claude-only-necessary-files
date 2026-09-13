@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>HOOK & SHOWCASE</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#050806">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://unpkg.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="dns-prefetch" href="https://api.groq.com">
+<link rel="dns-prefetch" href="https://generativelanguage.googleapis.com">
+<!-- Loaded non-render-blocking: a plain <link rel="stylesheet"> here would hold the
+     ENTIRE page unpainted — not just the font, everything, including the static top
+     bar — until fonts.googleapis.com responds. On a slow/flaky connection that's a
+     real, multi-second black screen with zero relation to any app code. preload +
+     swap-on-load lets the browser paint the real layout immediately with a fallback
+     font, then swap League Spartan in the moment it's ready. -->
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@400;500;600;700;800;900&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"></noscript>
+<link rel="stylesheet" href="styles.min.css">
+<script>(function(){try{var t=localStorage.getItem('hs-theme')||'dark';document.documentElement.setAttribute('data-theme',t);}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();</script>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo"><span class="dot"></span>HOOK <span>&</span> SHOWCASE<span class="sub">V1 / TEMPLATE-LOCKED</span></div>
+  <div class="topbar-right">
+    <div class="specline">1080 × 1920 · 9:16<br>REEL / STORY / SHORT</div>
+    <div class="theme-toggle" role="group" aria-label="Theme">
+      <button type="button" id="themeDarkBtn" title="Dark mode" aria-label="Dark mode">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+      </button>
+      <button type="button" id="themeLightBtn" title="Light mode" aria-label="Light mode">
+        <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="4.5" stroke="currentColor" stroke-width="2"/><path d="M12 2.5v2.2M12 19.3v2.2M21.5 12h-2.2M4.7 12H2.5M18.4 5.6l-1.6 1.6M7.2 16.8l-1.6 1.6M18.4 18.4l-1.6-1.6M7.2 7.2 5.6 5.6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <button type="button" id="settingsGearBtn" class="settings-gear" title="Settings" aria-label="Settings">
+      <svg viewBox="0 0 24 24" fill="none" width="16" height="16"><path d="M10.3 2.5h3.4l.5 2.4c.6.2 1.1.5 1.6.8l2.3-.9 1.7 3-1.9 1.6c.05.35.05.7 0 1.1l1.9 1.6-1.7 3-2.3-.9c-.5.3-1 .6-1.6.8l-.5 2.4h-3.4l-.5-2.4c-.6-.2-1.1-.5-1.6-.8l-2.3.9-1.7-3 1.9-1.6a5.3 5.3 0 0 1 0-1.1L4.2 8.3l1.7-3 2.3.9c.5-.3 1-.6 1.6-.8l.5-2.4Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12" cy="12" r="2.6" stroke="currentColor" stroke-width="1.6"/></svg>
+    </button>
+  </div>
+</div>
+
+<div class="settings-drawer-overlay" id="settingsDrawerOverlay">
+  <div class="settings-drawer" id="settingsDrawer" role="dialog" aria-label="Settings">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <h3 style="margin:0;">Settings</h3>
+      <button type="button" class="modal-close" id="settingsDrawerClose">✕</button>
+    </div>
+    <div class="field" style="margin-bottom:0;">
+      <label style="display:flex;align-items:center;gap:6px;">Groq API key<span class="info-dot" tabindex="0" data-tip="Used for Sync captions to voice timing. Saved locally in this browser only.">ⓘ</span></label>
+      <input type="password" id="groqKeyInput" placeholder="gsk_..." style="width:100%;background:#0d0f0c;border:1px solid var(--line);border-radius:6px;color:var(--paper);font-family:var(--mono);font-size:11px;padding:9px 10px;box-sizing:border-box;">
+      <div class="ds" style="margin-top:8px;">Needed once, before using "Sync captions to voice timing" in the Audio track section.</div>
+    </div>
+  </div>
+</div>
+<script>(function(){
+  function apply(t){document.documentElement.setAttribute('data-theme',t);try{localStorage.setItem('hs-theme',t);}catch(e){}
+    var d=document.getElementById('themeDarkBtn'),l=document.getElementById('themeLightBtn');
+    if(d&&l){d.classList.toggle('active',t==='dark');l.classList.toggle('active',t==='light');}
+  }
+  document.addEventListener('DOMContentLoaded',function(){
+    apply(document.documentElement.getAttribute('data-theme')||'dark');
+    document.getElementById('themeDarkBtn').addEventListener('click',function(){apply('dark');});
+    document.getElementById('themeLightBtn').addEventListener('click',function(){apply('light');});
+  });
+})();</script>
+
+<div class="quickbar">
+  <button type="button" id="newVideoBtn" class="qb-btn qb-btn-primary"><svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>New video</button>
+  <button type="button" id="openGalleryBtn" class="qb-btn qb-btn-alt"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1.2" stroke="currentColor" stroke-width="2"/><rect x="14" y="3" width="7" height="7" rx="1.2" stroke="currentColor" stroke-width="2"/><rect x="3" y="14" width="7" height="7" rx="1.2" stroke="currentColor" stroke-width="2"/><rect x="14" y="14" width="7" height="7" rx="1.2" stroke="currentColor" stroke-width="2"/></svg>Full gallery<span id="qbGalleryCount" class="qb-count" style="display:none;">0</span></button>
+  <button type="button" id="openVoiceLibBtn" class="qb-btn qb-btn-alt"><svg viewBox="0 0 24 24" fill="none"><rect x="9" y="2.5" width="6" height="11" rx="3" stroke="currentColor" stroke-width="2"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Voice library<span id="qbVoiceCount" class="qb-count" style="display:none;">0</span></button>
+  <button type="button" id="openMusicLibBtn" class="qb-btn qb-btn-alt"><svg viewBox="0 0 24 24" fill="none"><path d="M9 18V5l11-2v13" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="6" cy="18" r="3" stroke="currentColor" stroke-width="2"/><circle cx="17" cy="16" r="3" stroke="currentColor" stroke-width="2"/></svg>Music library<span id="qbMusicCount" class="qb-count" style="display:none;">0</span></button>
+  <button type="button" id="qbUploadZipBtn" class="qb-btn qb-btn-alt qb-zip-btn" title="Jump to the bulk .zip upload"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3v12M7 10l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 21h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Upload zip</button>
+  <button type="button" id="longFormBtn" class="qb-btn qb-btn-alt" title="Continuous images + captions + synced voiceover — no hook, no card"><svg viewBox="0 0 24 24" fill="none"><rect x="2.5" y="6" width="13" height="12" rx="1.4" stroke="currentColor" stroke-width="2"/><path d="M18.5 9.5 21.5 7v10l-3-2.5" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>Long-Form Video</button>
+  <button type="button" id="installAppBtn" class="qb-btn qb-btn-alt" style="display:none;" title="Install as an app on this device"><svg viewBox="0 0 24 24" fill="none"><rect x="4" y="3" width="16" height="18" rx="2" stroke="currentColor" stroke-width="2"/><path d="M12 8v6M9 11l3 3 3-3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Install app</button>
+</div>
+
+<div class="main">
+
+  <div class="stage">
+    <div style="width:100%;max-width:520px;">
+      <div class="tmpl-title">Three acts — timing and card position are yours</div>
+      <div class="tmpl-strip" id="tmplStrip"></div>
+      <div class="tmpl-legend" style="margin-top:10px;" id="tmplLegend">
+        <span class="lf-hide"><i class="swatch sw-hook"></i>hook flash</span>
+        <span class="lf-hide"><i class="swatch sw-card"></i>card</span>
+        <span><i class="swatch sw-show"></i>showcase</span>
+      </div>
+    </div>
+
+    <div class="frame" id="frame">
+      <canvas id="cv" width="1080" height="1920"></canvas>
+      <div class="empty" id="emptyState">Load 10 images<br>to preview the cut</div>
+      <div class="cap-handle" id="capHandle" title="Drag to position caption"></div>
+      <button type="button" id="fullscreenBtn" title="Fullscreen preview" style="position:absolute;top:10px;right:10px;width:32px;height:32px;border-radius:6px;background:rgba(0,0,0,0.55);border:1px solid rgba(255,255,255,0.2);color:#fff;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;z-index:5;">⛶</button>
+    </div>
+
+    <div class="transport">
+      <button class="playbtn" id="playBtn" title="Preview">
+        <svg id="playIcon" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 2.5V13.5L13 8L4 2.5Z" fill="currentColor"/></svg>
+      </button>
+      <div class="timecode" id="timecode">00.0 / 00.0s</div>
+      <div class="progressline" id="progressLine"><div class="fill" id="progFill"></div><div class="playhead" id="playhead"></div></div>
+      <button type="button" id="voiceCtrlBtn" title="Voice control (click to talk)" style="width:32px;height:32px;border-radius:50%;background:#1a1a16;border:1px solid var(--line);color:var(--paper);cursor:pointer;display:flex;align-items:center;justify-content:center;flex:0 0 auto;margin-left:6px;">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 1a2.5 2.5 0 0 0-2.5 2.5v4a2.5 2.5 0 0 0 5 0v-4A2.5 2.5 0 0 0 8 1Z" fill="currentColor"/><path d="M4 7.5a.5.5 0 0 0-1 0 5 5 0 0 0 4.5 4.975V14H6a.5.5 0 0 0 0 1h4a.5.5 0 0 0 0-1H8.5v-1.525A5 5 0 0 0 13 7.5a.5.5 0 0 0-1 0 4 4 0 0 1-8 0Z" fill="currentColor"/></svg>
+      </button>
+      <button type="button" id="voiceHelpBtn" title="Voice commands — what can I say?" style="width:32px;height:32px;border-radius:50%;background:#1a1a16;border:1px solid var(--line);color:var(--paper);cursor:pointer;font-size:12px;flex:0 0 auto;margin-left:4px;">?</button>
+      <button type="button" id="voiceUndoBtn" title="Undo last voice edit" style="width:32px;height:32px;border-radius:50%;background:#1a1a16;border:1px solid var(--line);color:var(--paper);cursor:pointer;font-size:13px;flex:0 0 auto;margin-left:4px;">↶</button>
+      <button type="button" id="voiceRedoBtn" title="Redo" style="width:32px;height:32px;border-radius:50%;background:#1a1a16;border:1px solid var(--line);color:var(--paper);cursor:pointer;font-size:13px;flex:0 0 auto;margin-left:4px;">↷</button>
+      <button type="button" id="historyBtn" title="Action history" style="width:32px;height:32px;border-radius:50%;background:#1a1a16;border:1px solid var(--line);color:var(--paper);cursor:pointer;font-size:12px;flex:0 0 auto;margin-left:4px;">🕘</button>
+    </div>
+  </div>
+
+  <div id="voicePanel" style="display:none;position:fixed;left:12px;bottom:12px;z-index:9999;width:280px;max-width:calc(100vw - 24px);background:#101210;border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-family:var(--mono);font-size:11px;color:var(--paper);box-shadow:0 8px 30px rgba(0,0,0,0.5);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+      <span style="display:flex;align-items:center;gap:6px;">
+        <span id="voiceStateDot" style="width:8px;height:8px;border-radius:50%;background:rgba(var(--text-rgb),0.3);flex:0 0 auto;transition:background .15s;"></span>
+        <span id="voiceStateLabel" style="color:var(--green-bright);">Voice control</span>
+      </span>
+      <select id="voiceLangSelect" style="background:#0d0f0c;border:1px solid var(--line);color:var(--paper);font-family:var(--mono);font-size:10px;border-radius:3px;padding:2px 4px;">
+        <option value="en-US">English / Roman Urdu</option>
+        <option value="ur-PK">Urdu (script)</option>
+      </select>
+    </div>
+    <div id="voiceHeard" style="min-height:14px;color:rgba(var(--text-rgb),0.55);margin-bottom:4px;word-break:break-word;"></div>
+    <div id="voiceResult" style="min-height:14px;word-break:break-word;margin-bottom:6px;"></div>
+    <label style="display:flex;align-items:center;gap:6px;margin-bottom:6px;color:rgba(var(--text-rgb),0.6);cursor:pointer;">
+      <input type="checkbox" id="voiceTtsToggle" style="margin:0;"> Speak responses aloud
+    </label>
+    <input type="password" id="geminiKeyInput" placeholder="Gemini API key (AIza...)" style="width:100%;box-sizing:border-box;background:#0d0f0c;border:1px solid var(--line);color:var(--paper);font-family:var(--mono);font-size:10px;border-radius:3px;padding:5px 6px;">
+  </div>
+
+  <div id="historyPanel" style="display:none;position:fixed;right:12px;bottom:12px;z-index:9999;width:280px;max-width:calc(100vw - 24px);max-height:60vh;background:#101210;border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-family:var(--mono);font-size:11px;color:var(--paper);box-shadow:0 8px 30px rgba(0,0,0,0.5);display:flex;flex-direction:column;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex:0 0 auto;">
+      <span style="color:var(--green-bright);">Action history</span>
+      <button type="button" id="historyCloseBtn" style="background:none;border:none;color:var(--paper);cursor:pointer;font-size:13px;">✕</button>
+    </div>
+    <div id="historyList" style="overflow-y:auto;flex:1 1 auto;display:flex;flex-direction:column-reverse;gap:4px;"></div>
+    <div style="font-size:9.5px;color:rgba(var(--text-rgb),0.4);margin-top:8px;flex:0 0 auto;">Say "undo", "redo", or "undo the last two changes" — or click ↶/↷ above.</div>
+  </div>
+
+  <div class="modal-overlay" id="voiceSheetOverlay" style="display:none;">
+    <div class="modal" style="max-width:560px;max-height:80vh;overflow:auto;">
+      <div class="modal-head" style="display:flex;justify-content:space-between;align-items:center;">
+        <h3 style="margin:0;">Voice Commands — What Can I Control?</h3>
+        <button type="button" class="modal-close" id="voiceSheetClose">✕</button>
+      </div>
+      <div id="voiceSheetBody" style="font-family:var(--mono);font-size:11.5px;line-height:1.5;"></div>
+    </div>
+  </div>
+
+  <!-- compact numbered grid — one button per pack, colored by status. Replaces the
+       old 3-5-live-editor-cards view, which fell over past a handful of packs. -->
+  <div class="modal-overlay" id="batchGridOverlay" style="display:none;">
+    <div class="modal" style="max-width:min(1200px,96vw);width:96vw;max-height:92vh;overflow:auto;">
+      <div class="modal-head" style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+        <h3 style="margin:0;" id="batchGridTitle">Pack grid</h3>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button type="button" id="batchDownloadAllBtn" class="align-btn" style="white-space:nowrap;">⬇ Download all packs</button>
+          <button type="button" class="modal-close" id="batchGridCloseBtn">✕</button>
+        </div>
+      </div>
+      <div id="batchGridProcessing" style="display:none;background:#ffffff;border-radius:12px;padding:52px 20px 30px;margin:10px 0 6px;text-align:center;">
+        <div id="bgpEyebrow" style="font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#9aa0aa;margin-bottom:8px;"></div>
+        <div id="bgpTitle" style="font-family:var(--disp);font-size:26px;font-weight:800;color:#14151a;margin-bottom:36px;"></div>
+        <div class="pl-row pl-light pl-lg" id="bgpStepper" style="justify-content:center;"></div>
+        <div id="bgpPackList" style="margin-top:38px;text-align:left;"></div>
+      </div>
+      <div id="batchGridNormalView">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+          <div id="batchGridSummary" style="font-family:var(--mono);font-size:11.5px;font-weight:700;color:var(--text);margin:10px 0 6px;"></div>
+          <button type="button" id="bgpBackToLiveBtn" style="display:none;font-family:var(--mono);font-size:10px;font-weight:700;color:var(--accent-ink,#fff);background:var(--gradient);border:none;border-radius:20px;padding:6px 12px;cursor:pointer;white-space:nowrap;">● Watch live</button>
+        </div>
+        <div id="batchGridStageLine" style="font-family:var(--mono);font-size:10.5px;color:var(--green-bright);margin-bottom:8px;min-height:14px;"></div>
+        <div id="batchGridLegend" style="font-family:var(--mono);font-size:9.5px;font-weight:600;color:rgba(var(--text-rgb),0.6);margin-bottom:14px;display:flex;gap:14px;flex-wrap:wrap;padding:8px 10px;background:var(--bg-sunken);border:1px solid var(--line);border-radius:8px;"></div>
+        <div id="batchErrorPanel" style="display:none;font-family:var(--mono);font-size:11px;color:#e0866a;background:rgba(224,134,106,0.08);border:1px solid #e0866a;border-radius:4px;padding:8px 10px;margin-bottom:10px;"></div>
+        <!-- Per-pack sync log: same breakdown "Synced — N/N captions force-aligned…" text +
+             per-caption line list that the manual "Sync captions to voice timing" button shows,
+             just replayed here from what the headless pipeline actually produced for that pack. -->
+        <div id="batchSyncLogPanel" style="display:none;font-family:var(--mono);font-size:11px;color:rgba(var(--text-rgb),0.85);background:var(--accent-soft);border:1px solid var(--line);border-radius:4px;padding:8px 10px;margin-bottom:10px;max-height:260px;overflow:auto;"></div>
+        <div id="batchDownloadAllStatus" style="display:none;font-family:var(--mono);font-size:10.5px;color:var(--green-bright);margin:0 0 10px;"></div>
+        <div id="batchGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(66px,1fr));gap:10px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- headless — never shown to the person. Runs the fixed pipeline (find mp3 → 1.12x
+       speed → sync → locked captions/music → RENDER) one pack at a time in the background.
+       Deliberately NOT display:none: a display:none subtree is never composited, and
+       browsers throttle/suspend canvas painting and WebCodecs hardware video encoding
+       inside frames that aren't actually being rendered — which silently stalled the
+       render step forever with no error, since encode() calls just never fire their
+       output callback. Positioned off-screen with real (if tiny) opacity instead, so it's
+       invisible to the person but the browser still treats it as a live, rendered frame
+       and the encoder actually runs. -->
+  <!-- Chromium stops GPU-compositing anything parked thousands of px off-screen (the old
+       left:-99999px) — it gets treated as "not visible" and falls back to a software
+       canvas/encode path, which is exactly why headless renders ran 10-20x slower than
+       the same render triggered by a visible click. Clipping a normal-position (0,0)
+       iframe through a 1x1px overflow:hidden wrapper keeps it inside Chromium's "on
+       screen" bounds — still fully invisible to the user, but GPU-accelerated like any
+       normal visible tab, so render speed matches manual editing. -->
+  <div style="position:fixed; left:0; top:0; width:1px; height:1px; overflow:hidden; opacity:0.01; pointer-events:none;">
+    <iframe id="batchPrepIframe" style="width:270px; height:480px; border:0;"></iframe>
+  </div>
+
+  <div class="panel">
+
+    <div class="field" id="tmplPanel" style="border:1px solid var(--green-bright);border-radius:6px;padding:12px;">
+      <label style="display:flex;align-items:center;gap:6px;">Template<span class="info-dot" tabindex="0" data-tip="Saves everything — images, captions, positions, font sizes, timing, card position, alignment. One click brings the whole project back.">ⓘ</span></label>
+      <button type="button" id="tmplRestoreBtn" style="width:100%;background:var(--green-bright);color:#06120b;border:none;border-radius:4px;padding:10px;font-family:var(--mono);font-weight:800;font-size:11px;letter-spacing:0.04em;text-transform:uppercase;cursor:pointer;margin-bottom:8px;">☰ Load a saved template</button>
+      <div class="btn-row" style="flex-wrap:wrap;">
+        <button class="ghost-btn" id="tmplSaveBtn" type="button" style="flex:1;">Save template</button>
+        <button class="ghost-btn" id="tmplExportBtn" type="button" style="flex:1;">Export .json</button>
+        <button class="ghost-btn" id="tmplImportBtn" type="button" style="flex:1;">Import .json</button>
+        <input type="file" id="tmplImportFile" accept="application/json" style="display:none;">
+      </div>
+      <div id="tmplPickerWrap" style="display:none;margin-top:10px;border-top:1px solid var(--line);padding-top:10px;">
+        <div style="font-size:9.5px;color:rgba(var(--text-rgb),0.55);margin-bottom:6px;">Which template?</div>
+        <select id="tmplPickerSelect" style="width:100%;margin-bottom:8px;background:#0e120f;color:var(--paper);border:1px solid var(--line);border-radius:4px;padding:8px;font-family:var(--mono);font-size:11px;"></select>
+        <button class="align-btn" id="tmplPickerLoadBtn" type="button" style="width:100%;">Load this template</button>
+      </div>
+      <div style="margin-top:14px;border-top:1px solid var(--line);padding-top:10px;">
+        <div style="display:flex;align-items:center;gap:6px;font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:rgba(var(--text-rgb),0.45);margin-bottom:8px;">Full backup<span class="info-dot" tabindex="0" data-tip="Everything lives in this browser's storage for THIS exact file — a re-downloaded copy (Chrome auto-renames it (2), (3)…) is a different file to the browser and starts empty. Backup before replacing this file; Restore right after opening the new copy.">ⓘ</span></div>
+        <div class="btn-row" style="margin-bottom:0;">
+          <button class="ghost-btn" id="backupAllBtn" type="button" style="flex:1;">⬇ Backup all data</button>
+          <button class="ghost-btn" id="restoreAllBtn" type="button" style="flex:1;">⬆ Restore all data</button>
+          <input type="file" id="restoreAllFile" accept=".zip,application/zip" style="display:none;">
+        </div>
+        <div id="backupAllStatus" style="font-size:9.5px;margin-top:6px;display:none;"></div>
+      </div>
+      <div id="tmplStatus" style="font-size:9.5px;color:var(--green-bright);margin-top:8px;min-height:12px;"></div>
+    </div>
+
+    <div>
+      <div class="upload-tabs" role="tablist">
+        <button type="button" class="upload-tab active" id="uploadTabSingleBtn" role="tab" aria-selected="true">Single pack</button>
+        <button type="button" class="upload-tab" id="uploadTabBatchBtn" role="tab" aria-selected="false">Bulk batch</button>
+        <button type="button" class="upload-tab" id="uploadTabLongFormBtn" role="tab" aria-selected="false">Long-form</button>
+      </div>
+
+      <div id="uploadTabSingle">
+        <label for="manifestInput" class="drop" id="manifestZone" style="margin-bottom:8px;">
+          <input type="file" id="manifestInput" multiple>
+          <div class="dt">⇪ Upload image + caption</div>
+          <div class="ds">drag the whole product-pack folder here <span class="info-dot" tabindex="0" data-tip="From your Pinterest Product Pack extension — or select manifest.json + images below.">ⓘ</span></div>
+        </label>
+        <button type="button" id="manifestFolderBtn" class="align-btn" style="width:100%;margin-bottom:10px;">Or browse for the folder</button>
+        <input type="file" id="manifestFolderInput" webkitdirectory directory multiple style="display:none">
+        <input type="file" id="manifestImagesInput" accept="image/*" multiple style="display:none">
+        <div id="manifestStatus" style="font-size:9.5px;margin-bottom:10px;min-height:12px;"></div>
+        <button type="button" id="manifestImagesBtn" style="display:none;width:100%;background:var(--green-bright);color:#06120b;border:none;border-radius:4px;padding:9px;font-family:var(--mono);font-weight:800;font-size:10.5px;letter-spacing:0.04em;text-transform:uppercase;cursor:pointer;margin-bottom:10px;">Select the matching images</button>
+
+        <div class="secondary-action-row">
+          <button type="button" id="findMatchBtn" class="ghost-btn">🔎 Find matching MP3</button>
+          <span class="info-dot" tabindex="0" data-tip="Searches your Music library for an MP3 whose filename matches this pack.">ⓘ</span>
+        </div>
+        <div id="findMatchStatus" style="font-size:9.5px;margin:4px 0;min-height:12px;"></div>
+        <div id="findMatchResult" style="display:none;font-size:9.5px;color:rgba(var(--text-rgb),0.7);margin-bottom:6px;line-height:1.5;"></div>
+
+        <details class="manual-images-disclosure">
+          <summary>Or add up to 10 images manually</summary>
+          <label for="fileInput" class="drop" id="dropZone" style="margin-top:10px;">
+            <input type="file" id="fileInput" accept="image/*" multiple>
+            <div class="dt">Drop or select images</div>
+            <div class="ds">exactly 10 · jpg / png / webp</div>
+          </label>
+          <div style="display:flex;align-items:baseline;gap:6px;margin-top:14px;">
+            <div class="count" id="countNum">0<span>/10</span></div>
+          </div>
+          <div class="tray" id="tray" style="margin-top:12px;"></div>
+        </details>
+      </div>
+
+      <div id="uploadTabBatch" style="display:none;">
+        <div id="batchPanel" class="status-card">
+          <div class="status-card-head">
+            <div class="dt" style="color:var(--green-bright);margin:0;">⚡ Bulk pack batch</div>
+            <span class="info-dot" tabindex="0" data-tip="Select the parent folder holding all your pack subfolders (each with its own manifest.json + 10 images) — works for 5 or 500. Every pack is auto-prepared in the background: matching MP3 → speed → sync → locked caption style → default background music.">ⓘ</span>
+          </div>
+          <div id="batchPanelToggle" style="display:none;"><span id="batchPanelCaret"></span></div>
+          <div id="batchPanelBody">
+            <div id="batchDropZone" class="drop" style="padding:16px 12px;margin-bottom:8px;">
+              <div class="dt" style="font-size:11px;">⇪ Drag the parent folder here</div>
+              <div class="ds" style="font-size:9px;margin-top:4px;">most reliable — works even opened as a local file</div>
+            </div>
+            <div class="btn-row">
+              <button type="button" id="batchFolderBtn" class="align-btn">Browse folder</button>
+              <button type="button" id="batchZipBtn" class="align-btn">Upload .zip</button>
+            </div>
+            <input type="file" id="batchFolderInput" webkitdirectory directory multiple style="display:none">
+            <input type="file" id="batchZipInput" accept=".zip,application/zip" style="display:none">
+
+            <details class="log-drawer">
+              <summary>Ingest details</summary>
+              <div id="batchIngestStatus" style="font-size:9.5px;margin-top:6px;min-height:12px;"></div>
+            </details>
+
+            <div id="batchResumeBox" style="display:none;background:rgba(224,168,74,0.08);border:1px solid #e0a84a;border-radius:8px;padding:10px;margin:10px 0;font-size:9.5px;">
+              <div id="batchResumeText" style="margin-bottom:6px;color:#e0a84a;"></div>
+              <div class="btn-row" style="margin-bottom:0;">
+                <button type="button" id="batchResumeBtn" class="align-btn">Resume unfinished batch</button>
+                <button type="button" id="batchClearBtn" class="align-btn">Clear old batch</button>
+              </div>
+            </div>
+
+            <div id="batchListWrap" style="display:none;margin-top:10px;">
+              <div style="font-size:9.5px;color:rgba(var(--text-rgb),0.55);margin-bottom:10px;" id="batchListSummary"></div>
+
+              <div class="controls-bar">
+                <label style="display:flex;align-items:center;gap:6px;font-size:9.5px;white-space:nowrap;">
+                  Speed
+                  <input type="number" id="batchSpeedInput" value="1.12" step="0.01" min="0.5" max="2" class="mini-num">
+                  <span class="info-dot" tabindex="0" data-tip="Applies to every pack Start auto-prepare runs — same audio-verified boundary refinement as the manual Sync button.">ⓘ</span>
+                </label>
+                <button type="button" id="batchGenerateBtn" class="primary-btn">▶ Start auto-prepare</button>
+              </div>
+
+              <div id="batchTimerBadge" class="status-pill" style="display:none;"></div>
+              <div id="batchPrepStatus" style="font-size:9.5px;margin:2px 0 2px;min-height:12px;color:var(--green-bright);"></div>
+              <div id="batchStageDetail" style="font-size:9px;margin-bottom:8px;min-height:11px;color:rgba(var(--text-rgb),0.5);font-family:var(--mono);"></div>
+
+              <div class="pl-wrap">
+                <div class="pl-row" id="batchWorkflowList"></div>
+              </div>
+
+              <button type="button" id="batchOpenGridBtn" class="ghost-btn" style="width:100%;margin-top:10px;">⊞ Open pack grid</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="uploadTabLongForm" style="display:none;">
+        <div id="lfPanel" class="status-card">
+          <div class="status-card-head">
+            <div class="dt" style="color:var(--green-bright);margin:0;">🎬 Long-form video</div>
+            <span class="info-dot" tabindex="0" data-tip="Continuous images + captions, no hook flash, no card. Supports 30, 50, 100+ images. Drop a folder or .zip with just manifest.json + images. Upload your narration MP3 separately to the Voice-over library (Voice library in the quickbar) and transcribe it there — Autoprepare's 'Finding matching MP3' step will pick the best match automatically, exactly like short-form's Find match. Reuses the exact same sync/render engine as the short-form pipeline.">ⓘ</span>
+          </div>
+          <div class="ds" style="margin:2px 0 10px;">Same 7-step pipeline as the short-form batch — just no hook flash, no card, and any number of images.</div>
+          <div id="lfDropZone" class="drop" style="padding:16px 12px;margin-bottom:8px;">
+            <div class="dt" style="font-size:11px;">⇪ Drag the folder or .zip here</div>
+            <div class="ds" style="font-size:9px;margin-top:4px;">images (30, 50, 100+) + manifest.json — no voiceover needed here</div>
+          </div>
+          <div class="btn-row">
+            <button type="button" id="lfFolderBtn" class="align-btn">Browse folder</button>
+            <button type="button" id="lfZipBtn" class="align-btn">Upload .zip</button>
+          </div>
+          <input type="file" id="lfFolderInput" webkitdirectory directory multiple style="display:none">
+          <input type="file" id="lfZipInput" accept=".zip,application/zip" style="display:none">
+
+          <div id="lfIngestStatus" style="font-size:9.5px;margin:8px 0 2px;min-height:12px;"></div>
+          <div id="lfCurrentItem" style="font-size:9px;color:rgba(var(--text-rgb),0.5);font-family:var(--mono);min-height:11px;margin-bottom:6px;"></div>
+          <div id="lfQueueList" style="display:none;margin-bottom:8px;flex-wrap:wrap;gap:6px;"></div>
+          <div id="lfErrorPanel" style="display:none;font-family:var(--mono);font-size:10px;color:#e0866a;background:rgba(224,134,106,0.08);border:1px solid #e0574a;border-radius:4px;padding:8px 10px;margin-bottom:10px;max-height:160px;overflow:auto;line-height:1.5;"></div>
+
+          <div id="lfReadyBox" style="display:none;">
+            <div class="controls-bar">
+              <label style="display:flex;align-items:center;gap:6px;font-size:9.5px;white-space:nowrap;">
+                Speed
+                <input type="number" id="lfSpeedInput" value="1.0" step="0.01" min="0.5" max="2" class="mini-num">
+                <span class="info-dot" tabindex="0" data-tip="Same time-stretch/sync engine as the short-form Voice speed control.">ⓘ</span>
+              </label>
+              <button type="button" id="lfGenerateBtn" class="primary-btn">▶ Autoprepare</button>
+            </div>
+            <div id="lfTimerBadge" class="status-pill" style="display:none;"></div>
+            <div id="lfPrepStatus" style="font-size:9.5px;margin:6px 0 2px;min-height:12px;color:var(--green-bright);"></div>
+            <div id="lfStageDetail" style="font-size:9px;margin-bottom:8px;min-height:11px;color:rgba(var(--text-rgb),0.5);font-family:var(--mono);"></div>
+            <div class="pl-wrap">
+              <div class="pl-row" id="lfWorkflowList"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Structure &amp; timing</label>
+      <div class="timing-row lf-hide">
+        <span>Hook flash</span>
+        <input type="range" id="hookDurRange" min="0.1" max="1" step="0.01" value="0.2">
+        <span style="display:flex;align-items:center;gap:2px;"><input type="number" id="hookDurNum" min="0.1" max="1" step="0.01" value="0.20" style="width:56px;background:#0d0f0c;border:1px solid var(--line);border-radius:3px;color:var(--paper);font-family:var(--mono);font-size:11px;padding:5px 4px;text-align:right;">s</span>
+      </div>
+      <div class="timing-row lf-hide">
+        <span>Card length</span>
+        <input type="range" id="cardDurRange" min="1" max="10" step="0.01" value="2">
+        <span style="display:flex;align-items:center;gap:2px;"><input type="number" id="cardDurNum" min="1" max="10" step="0.01" value="2.00" style="width:56px;background:#0d0f0c;border:1px solid var(--line);border-radius:3px;color:var(--paper);font-family:var(--mono);font-size:11px;padding:5px 4px;text-align:right;">s</span>
+      </div>
+      <div class="timing-row lf-hide">
+        <span>Card position</span>
+        <select id="cardPosSelect"></select>
+      </div>
+      <div class="timing-row lf-hide" style="align-items:center;">
+        <span>Card color</span>
+        <div style="display:flex;align-items:center;gap:8px;grid-column:2/4;">
+          <div id="cardColorSwatch" title="Click to pick a custom color" style="width:26px;height:26px;border-radius:5px;border:1px solid var(--line);cursor:pointer;flex-shrink:0;"></div>
+          <label class="toggle-row" style="margin:0;flex:1;"><input type="checkbox" id="cardColorAutoToggle"><span>Auto (from images)</span></label>
+        </div>
+      </div>
+      <div id="cardColorPicker" class="lf-hide" style="display:none;margin:2px 0 10px;padding:12px;border:1px solid var(--line);border-radius:6px;background:rgba(255,255,255,0.015);">
+
+        <div style="font-size:9px;letter-spacing:0.08em;text-transform:uppercase;color:rgba(var(--text-rgb),0.4);margin-bottom:8px;">Palette</div>
+        <div id="presetSwatches" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;"></div>
+
+        <button type="button" id="customColorToggleBtn" class="align-btn" style="width:100%;margin-bottom:0;display:flex;justify-content:space-between;align-items:center;">
+          <span>Custom color</span><span id="customColorChevron">▾</span>
+        </button>
+        <div id="customColorBody" style="display:none;margin-top:12px;">
+          <canvas id="svCanvas" width="220" height="120" style="width:100%;height:120px;border-radius:4px;cursor:crosshair;display:block;"></canvas>
+          <div id="svMarker" style="position:relative;width:0;height:0;"><div style="position:absolute;width:10px;height:10px;border:2px solid #fff;border-radius:50%;box-shadow:0 0 2px rgba(0,0,0,0.6);pointer-events:none;transform:translate(-5px,-5px);top:0;left:0;" id="svMarkerDot"></div></div>
+          <canvas id="hueCanvas" width="220" height="14" style="width:100%;height:14px;border-radius:4px;cursor:pointer;display:block;margin-top:12px;"></canvas>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:12px;">
+            <span style="font-size:9px;color:rgba(var(--text-rgb),0.45);">HEX</span>
+            <input type="text" id="hexInput" placeholder="#0e3d24" style="flex:1;background:#0d0f0c;border:1px solid var(--line);border-radius:4px;color:var(--paper);font-family:var(--mono);font-size:11px;padding:7px 8px;">
+          </div>
+        </div>
+        <div style="margin-top:12px;">
+          <div style="display:flex;justify-content:space-between;font-size:9px;color:rgba(var(--text-rgb),0.45);margin-bottom:4px;">
+            <span>Alpha / tint strength</span><span id="cardAlphaVal">90%</span>
+          </div>
+          <input type="range" id="cardAlphaRange" min="0.05" max="1" step="0.01" value="0.9" style="width:100%;">
+        </div>
+      </div>
+
+      <div class="timing-row lf-hide" style="align-items:center;">
+        <span>Card background</span>
+        <div style="display:flex;gap:6px;grid-column:2/4;">
+          <button type="button" class="align-btn" data-bgmode="color" id="cardBgModeColorBtn" style="flex:1;">Solid color</button>
+          <button type="button" class="align-btn" data-bgmode="image" id="cardBgModeImageBtn" style="flex:1;">Use an image</button>
+        </div>
+      </div>
+      <div id="cardBgThumbsWrap" class="lf-hide" style="display:none;margin-bottom:10px;">
+        <div style="font-size:9.5px;color:rgba(var(--text-rgb),0.55);margin-bottom:6px;">Pick which loaded image sits behind the card, or upload your own — the color above becomes a tint over it, so the word stays readable.</div>
+        <div id="cardBgThumbs" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+        <input type="file" id="cardBgUploadInput" accept="image/*" style="display:none;">
+        <button type="button" id="cardBgUploadBtn" class="align-btn" style="width:100%;margin-top:8px;">⇪ Upload image from laptop</button>
+      </div>
+
+      <div class="timing-row lf-hide" style="align-items:center;">
+        <span>Word color</span>
+        <div style="display:flex;align-items:center;gap:8px;grid-column:2/4;">
+          <button type="button" class="align-btn cw-preset" data-color="#ffffff" style="padding:6px 10px;">White</button>
+          <button type="button" class="align-btn cw-preset" data-color="#050806" style="padding:6px 10px;">Black</button>
+          <div id="cardTextColorSwatch" title="Custom word color" style="width:26px;height:26px;border-radius:5px;border:1px solid var(--line);cursor:pointer;flex-shrink:0;background:#ffffff;"></div>
+        </div>
+      </div>
+      <div id="cardTextColorPicker" class="lf-hide" style="display:none;margin:2px 0 10px;padding:12px;border:1px solid var(--line);border-radius:6px;background:rgba(255,255,255,0.015);">
+        <canvas id="textSvCanvas" width="220" height="100" style="width:100%;height:100px;border-radius:4px;cursor:crosshair;display:block;"></canvas>
+        <div id="textSvMarker" style="position:relative;width:0;height:0;"><div style="position:absolute;width:10px;height:10px;border:2px solid #fff;border-radius:50%;box-shadow:0 0 2px rgba(0,0,0,0.6);pointer-events:none;transform:translate(-5px,-5px);top:0;left:0;" id="textSvMarkerDot"></div></div>
+        <canvas id="textHueCanvas" width="220" height="14" style="width:100%;height:14px;border-radius:4px;cursor:pointer;display:block;margin-top:10px;"></canvas>
+      </div>
+      <div class="hint lf-hide" id="cardWordColorHint" style="margin-top:-4px;margin-bottom:10px;">Applies to the whole card word reveal. Per-image caption colors are set individually — click the 🎨 next to a caption below.</div>
+
+      <div class="timing-row">
+        <span>Image length</span>
+        <input type="range" id="showDurRange" min="0.2" max="5" step="0.1" value="1">
+        <span class="val" id="showDurVal">1.0s</span>
+      </div>
+      <div class="timing-row lf-hide">
+        <span>Card word size</span>
+        <div class="stepper" id="cardSizeStepper" style="grid-column:2/4;">
+          <button type="button" id="cardSizeMinus">−</button>
+          <input type="number" class="sval" id="cardSizeVal" value="42">
+          <button type="button" id="cardSizePlus">+</button>
+        </div>
+      </div>
+      <div class="timing-row">
+        <span>Caption size</span>
+        <div class="stepper" id="capSizeStepper" style="grid-column:2/4;">
+          <button type="button" id="capSizeMinus">−</button>
+          <input type="number" class="sval" id="capSizeVal" value="30">
+          <button type="button" id="capSizePlus">+</button>
+        </div>
+      </div>
+      <div class="hint">"Image length" sets all showcase images at once — fine-tune any single image with the number field next to its caption below. Type captions exactly how you want them shown — nothing is auto-capitalized.</div>
+    </div>
+
+    <div class="field lf-hide">
+      <label>Hook flash caption (act 1, optional, shown on every flash)</label>
+      <input type="text" id="hookCapText" placeholder="e.g. wait for it...">
+      <div class="timing-row" style="margin-top:10px;grid-template-columns:1fr auto;">
+        <span>Caption size</span>
+        <div class="stepper" id="hookCapSizeStepper">
+          <button type="button" id="hookCapSizeMinus">−</button>
+          <input type="number" class="sval" id="hookCapSizeVal" value="30">
+          <button type="button" id="hookCapSizePlus">+</button>
+        </div>
+      </div>
+      <label class="toggle-row" style="margin-top:8px;"><input type="checkbox" id="hookWordToggle"><span>Reveal one word at a time</span></label>
+    </div>
+
+    <div class="field">
+      <label>Showcase captions (act 3, text + seconds per image)</label>
+      <label class="toggle-row"><input type="checkbox" id="showWordToggle"><span>Reveal one word at a time</span></label>
+
+      <div style="margin-top:10px;border:1px solid var(--line);border-radius:4px;padding:10px;">
+        <div style="display:flex;align-items:center;gap:6px;font-size:9px;text-transform:uppercase;letter-spacing:.05em;color:rgba(var(--text-rgb),0.45);margin-bottom:8px;">Bulk paste<span class="info-dot" tabindex="0" data-tip="Paste all 10 at once, separated by commas — they'll drop into the 10 boxes below in order.">ⓘ</span></div>
+        <textarea id="bulkCapInput" rows="3" placeholder="e.g. white t-shirt, dark jeans, white sneakers, ..." style="width:100%;background:#0d0f0c;border:1px solid var(--line);border-radius:3px;color:var(--paper);font-family:var(--mono);font-size:11px;padding:8px;resize:vertical;"></textarea>
+        <button type="button" id="bulkCapApplyBtn" class="align-btn" style="margin-top:8px;">Split into captions below</button>
+        <div id="bulkCapStatus" style="font-size:9.5px;color:var(--green-bright);margin-top:6px;min-height:12px;"></div>
+      </div>
+
+      <div id="capList" style="display:flex;flex-direction:column;gap:6px;margin-top:8px;"></div>
+      <div style="margin-top:14px;">
+        <label style="margin-bottom:6px;">Caption position</label>
+        <div class="align-row" id="alignRow">
+          <button class="align-btn" data-a="top">Top</button>
+          <button class="align-btn" data-a="center">Center</button>
+          <button class="align-btn active" data-a="bottom">Bottom</button>
+          <button class="align-btn active" data-a="left">Left</button>
+          <button class="align-btn" data-a="right">Right</button>
+        </div>
+        <div class="hint">League Spartan, bold, white, your exact capitalization. Drag the green dot on the preview to fine-tune exact position — it moves whatever act (hook, card, or showcase) is currently on screen.</div>
+      </div>
+    </div>
+
+    <div class="field lf-hide">
+      <label>Card text (act 2, reveals one word at a time across the card's length)</label>
+      <input type="text" id="cardText" value="Watch this. Comment vintage. To get my free guide." maxlength="140">
+    </div>
+
+    <div class="field">
+      <label>Audio track (optional)</label>
+      <div style="position:relative;">
+        <label for="audioInput" class="drop track-player" id="audioDrop">
+          <input type="file" id="audioInput" accept="audio/mp3,audio/mpeg,audio/*">
+          <span class="tp-icon">🎵</span>
+          <span class="tp-info">
+            <span class="tp-name dt" id="audioDT">Add MP3</span>
+            <span class="tp-sub ds" id="audioDS">plays under the full video, muted after export finishes</span>
+          </span>
+        </label>
+        <button class="icon-btn" id="audioRemove" style="display:none;position:absolute;top:8px;right:8px;" title="Remove audio">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none"><path d="M4 7h16M9 7V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V7m-8 0 1 13.5A1.5 1.5 0 0 0 9.5 22h5a1.5 1.5 0 0 0 1.5-1.5L17 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+      <div id="voiceSpeedBox" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--line);">
+        <label style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <span style="display:flex;align-items:center;gap:6px;">Voice-over speed<span class="info-dot" tabindex="0" data-tip="Speed adjustment preserves natural pitch — no chipmunk or slow-mo voice effect.">ⓘ</span></span>
+        </label>
+        <div class="slider-row">
+          <input type="range" id="voiceSpeedRange" min="0.5" max="2" step="0.01" value="1">
+          <span class="slider-val-badge" id="voiceSpeedVal">1.00x</span>
+        </div>
+        <div style="display:flex;justify-content:flex-end;margin-top:8px;">
+          <button type="button" id="voiceSpeedApplyBtn" style="display:none;">Apply speed</button>
+          <button type="button" id="voiceSpeedResetBtn" class="ghost-btn" style="display:none;">Reset to 1x</button>
+        </div>
+        <div id="voiceSpeedStatus" class="ds" style="margin-top:6px;"></div>
+      </div>
+      <div id="whisperBox" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--line);">
+        <button class="align-btn" id="syncVoiceBtn" style="width:100%;">Sync captions to voice timing</button>
+        <div class="ds" id="syncStatus" style="margin-top:6px;"></div>
+        <div id="syncBreakdown" style="display:none;margin-top:8px;font-family:var(--mono);font-size:10px;line-height:1.6;color:rgba(var(--text-rgb),0.75);"></div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label style="display:flex;align-items:center;gap:6px;">Background music (optional)<span class="info-dot" tabindex="0" data-tip="Loops the trimmed section under the full video, mixed under the voice-over. Pick more tracks from the Music library in the top bar.">ⓘ</span></label>
+      <div class="music-select-card">
+        <select id="bgMusicSelect">
+          <option value="">— none —</option>
+        </select>
+        <button type="button" class="play-toggle" id="bgMusicPreviewBtn" title="Preview">▶</button>
+      </div>
+      <div style="margin-top:12px;">
+        <label style="font-size:9.5px;color:rgba(var(--text-rgb),0.55);display:flex;justify-content:space-between;margin-bottom:6px;"><span>Music volume</span><span class="badge" id="bgMusicVolVal">25%</span></label>
+        <input type="range" id="bgMusicVolRange" min="0" max="100" value="25" style="width:100%;">
+      </div>
+      <div style="margin-top:14px;" id="bgMusicTrimWrap">
+        <div class="trim-badges">
+          <span>Trim clip <span class="info-dot" tabindex="0" data-tip="Drag either handle to pick the section that plays, e.g. 0:35–1:20.">ⓘ</span></span>
+          <span id="bgMusicDurLabel" style="opacity:.55;"></span>
+        </div>
+        <div class="badge" id="bgMusicTrimLabel" style="display:inline-block;margin-bottom:8px;">0:00–0:00</div>
+        <div class="dual-range" id="bgMusicTrimTrack">
+          <div class="dr-track"></div>
+          <div class="dr-fill" id="bgMusicTrimFill"></div>
+          <input type="range" id="bgMusicStartRange" min="0" max="1000" value="0" step="1">
+          <input type="range" id="bgMusicEndRange" min="0" max="1000" value="1000" step="1">
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <button class="generate" id="genBtn" disabled>Load 10 images first</button>
+      <div class="genbar" id="genBar"><div class="f" id="genFill"></div></div>
+      <div class="status" id="genStatus" style="display:none;">
+        <span id="genLabel">Rendering…</span><span id="genPct">0%</span>
+      </div>
+      <a href="#" class="dl" id="dlLink" download="hook-showcase.mp4">Download video</a>
+    </div>
+
+    <div class="field" id="galleryPanel">
+      <label>Video gallery</label>
+      <div style="font-size:9.5px;color:rgba(var(--text-rgb),0.55);line-height:1.5;margin-bottom:10px;">
+        Every video stays here always — grouped by day, newest first. Survives closing the tab or browser.
+      </div>
+      <div id="videoGallery" style="display:flex;flex-direction:column;gap:8px;"></div>
+      <div id="galleryEmpty" style="font-size:9.5px;color:rgba(var(--text-rgb),0.4);">No videos generated yet.</div>
+    </div>
+
+    <div class="footnote">
+      Renders entirely in-browser via Canvas + MediaRecorder. No upload, no server. Exports as MP4 where your browser supports it directly (Safari); elsewhere it's captured then converted to MP4 in-browser before download, so it opens correctly on WhatsApp and Instagram. Keep this tab open and active (don't switch tabs) while rendering — backgrounding it can stall the capture.
+    </div>
+
+  </div>
+
+</div>
+
+<div class="modal-overlay" id="galleryModalOverlay">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h2>All videos</h2>
+      <button type="button" class="modal-close" id="galleryModalClose">✕</button>
+    </div>
+    <div id="storagePanel" style="border:1px solid var(--line);border-radius:4px;padding:10px;margin-bottom:12px;">
+      <div id="storageUsageLine" style="font-family:var(--mono);font-size:10.5px;color:rgba(var(--text-rgb),0.75);margin-bottom:8px;">Checking storage usage…</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <button type="button" class="align-btn" id="storagePruneBtn" style="padding:6px 9px;">Keep last 10 videos, delete rest</button>
+        <button type="button" class="align-btn" id="storageClearVideosBtn" style="padding:6px 9px;">Delete all saved videos</button>
+        <button type="button" class="align-btn" id="storageClearMusicBtn" style="padding:6px 9px;">Delete all music</button>
+      </div>
+      <div id="storageActionStatus" style="font-size:9.5px;color:var(--green-bright);margin-top:6px;min-height:12px;"></div>
+    </div>
+    <div id="videoGalleryModal" style="display:flex;flex-direction:column;gap:8px;"></div>
+    <div id="galleryModalEmpty" style="font-size:9.5px;color:rgba(var(--text-rgb),0.4);">No videos generated yet.</div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="voiceLibModalOverlay">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h2>Voice-over library</h2>
+      <button type="button" class="modal-close" id="voiceLibModalClose">✕</button>
+    </div>
+    <div style="font-size:9.5px;color:rgba(var(--text-rgb),0.55);line-height:1.5;margin-bottom:10px;">
+      Upload every MP3 voice-over at once. Run transcription, then each one gets auto-matched to the gallery video whose captions/products it talks about — in order, not just keyword overlap. Review and reassign anything uncertain before exporting.
+    </div>
+    <div id="voKeyStatus" style="font-size:9.5px;margin-bottom:10px;padding:8px 10px;border:1px solid var(--line);border-radius:4px;"></div>
+    <label for="voMultiInput" class="drop" id="voDropZone" style="padding:16px;margin-bottom:10px;">
+      <input type="file" id="voMultiInput" accept="audio/mp3,audio/mpeg,audio/*" multiple>
+      <div class="dt">Drop or select MP3s</div>
+      <div class="ds">any number at once · saved immediately</div>
+    </label>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+      <button type="button" id="voTranscribeAllBtn" class="align-btn" style="flex:1;">▶ Run transcription (50s apart)</button>
+      <button type="button" id="voRematchBtn" class="align-btn">Re-match all</button>
+    </div>
+    <audio id="voPlayer" style="display:none;"></audio>
+    <div id="voStatus" style="font-size:9.5px;color:var(--green-bright);margin-bottom:10px;min-height:12px;"></div>
+    <div id="voList" style="display:flex;flex-direction:column;gap:8px;"></div>
+    <div id="voEmpty" style="font-size:9.5px;color:rgba(var(--text-rgb),0.4);">No voice-overs uploaded yet.</div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="musicLibModalOverlay">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h2>Background music library</h2>
+      <button type="button" class="modal-close" id="musicLibModalClose">✕</button>
+    </div>
+    <div style="font-size:9.5px;color:rgba(var(--text-rgb),0.55);line-height:1.5;margin-bottom:10px;">
+      Upload every background track once, here. Then pick one per video in the "Background music" field in the editor — it loops under the full video and mixes under any voice-over when you export.
+    </div>
+    <label for="musicMultiInput" class="drop" id="musicDropZone" style="padding:16px;margin-bottom:10px;">
+      <input type="file" id="musicMultiInput" accept="audio/mp3,audio/mpeg,audio/*" multiple>
+      <div class="dt">Drop or select music files</div>
+      <div class="ds">any number at once · saved immediately</div>
+    </label>
+    <audio id="musicPlayer" style="display:none;"></audio>
+    <div id="musicStatus" style="font-size:9.5px;color:var(--green-bright);margin-bottom:10px;min-height:12px;"></div>
+    <div id="musicList" style="display:flex;flex-direction:column;gap:8px;"></div>
+    <div id="musicEmpty" style="font-size:9.5px;color:rgba(var(--text-rgb),0.4);">No background music uploaded yet.</div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="playerOverlay" style="align-items:center;">
+  <div class="modal-box" style="max-width:400px;">
+    <div class="modal-head">
+      <h2 id="playerTitle">Video</h2>
+      <button type="button" class="modal-close" id="playerClose">✕</button>
+    </div>
+    <div style="width:100%;aspect-ratio:9/16;background:#000;border-radius:4px;overflow:hidden;">
+      <video id="playerVideo" controls playsinline style="width:100%;height:100%;object-fit:contain;background:#000;"></video>
+      <audio id="previewAudio" style="display:none;"></audio>
+    </div>
+  </div>
+</div>
+
+<script>(function(){
+  var ICONS={
+    template:'<path d="M4 4h16v4H4z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M4 12h16M4 16h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
+    images:'<rect x="3" y="4" width="18" height="15" rx="2" stroke="currentColor" stroke-width="2"/><circle cx="8.5" cy="9.5" r="1.5" stroke="currentColor" stroke-width="1.6"/><path d="M21 15l-5-5-6 6M11 19l-3-3-5 3" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>',
+    timing:'<circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><path d="M12 7v5l3 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
+    hook:'<path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>',
+    showcase:'<rect x="3" y="3" width="7" height="7" rx="1.2" stroke="currentColor" stroke-width="2"/><rect x="14" y="3" width="7" height="7" rx="1.2" stroke="currentColor" stroke-width="2"/><rect x="3" y="14" width="7" height="7" rx="1.2" stroke="currentColor" stroke-width="2"/><rect x="14" y="14" width="7" height="7" rx="1.2" stroke="currentColor" stroke-width="2"/>',
+    card:'<rect x="3" y="6" width="18" height="12" rx="2" stroke="currentColor" stroke-width="2"/><path d="M3 10h18" stroke="currentColor" stroke-width="2"/>',
+    audio:'<path d="M4 10v4M8 6v12M12 3v18M16 6v12M20 10v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
+    music:'<path d="M9 18V5l11-2v13" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="6" cy="18" r="3" stroke="currentColor" stroke-width="2"/><circle cx="17" cy="16" r="3" stroke="currentColor" stroke-width="2"/>',
+    gallery:'<rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/><path d="M3 15l5-5 4 4 5-5 4 4" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>'
+  };
+  var CHEV='<svg class="chev" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  function iconSvg(key){return '<svg viewBox="0 0 24 24" fill="none">'+(ICONS[key]||ICONS.template)+'</svg>';}
+  function titleFor(el){
+    if(el.id==='tmplPanel')return['Template','template'];
+    if(el.id==='galleryPanel')return['Video gallery','gallery'];
+    var lbl=el.querySelector(':scope > label:not(.drop):not(.toggle-row)');
+    if(lbl){
+      var txt=lbl.textContent.trim().split('(')[0].split('—')[0].trim();
+      var low=txt.toLowerCase();
+      var key='template';
+      if(low.indexOf('structure')>-1||low.indexOf('timing')>-1)key='timing';
+      else if(low.indexOf('hook')>-1)key='hook';
+      else if(low.indexOf('showcase')>-1)key='showcase';
+      else if(low.indexOf('card')>-1)key='card';
+      else if(low.indexOf('audio')>-1)key='audio';
+      else if(low.indexOf('music')>-1)key='music';
+      return[txt,key];
+    }
+    return['Images & batch','images'];
+  }
+  function wrap(){
+    var panel=document.querySelector('.panel');
+    if(!panel||panel.dataset.accordionized)return;
+    panel.dataset.accordionized='1';
+    var kids=Array.prototype.slice.call(panel.children);
+    kids.forEach(function(child){
+      if(child.querySelector('#genBtn'))return; // pinned generate/download block
+      if(child.classList.contains('footnote'))return; // plain trailing text, not a section
+      var meta=titleFor(child);
+      var item=document.createElement('div');
+      item.className='accordion-item';
+      var head=document.createElement('button');
+      head.type='button';
+      head.className='accordion-head';
+      head.innerHTML=iconSvg(meta[1])+'<span>'+meta[0]+'</span>'+CHEV;
+      var body=document.createElement('div');
+      body.className='accordion-body';
+      var inner=document.createElement('div');
+      inner.className='accordion-body-inner';
+      panel.replaceChild(item,child);
+      inner.appendChild(child);
+      body.appendChild(inner);
+      item.appendChild(head);
+      item.appendChild(body);
+      head.addEventListener('click',function(){
+        var wasOpen=item.classList.contains('open');
+        panel.querySelectorAll('.accordion-item.open').forEach(function(o){o.classList.remove('open');});
+        if(!wasOpen)item.classList.add('open');
+      });
+    });
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',wrap);else wrap();
+
+  function wireZipShortcut(){
+    var btn=document.getElementById('qbUploadZipBtn');
+    var target=document.getElementById('batchZipBtn');
+    if(!btn||!target)return;
+    btn.addEventListener('click',function(){
+      var item=target.closest('.accordion-item');
+      if(item){
+        document.querySelectorAll('.accordion-item.open').forEach(function(o){if(o!==item)o.classList.remove('open');});
+        item.classList.add('open');
+      }
+      var body=document.getElementById('batchPanelBody');
+      var toggle=document.getElementById('batchPanelToggle');
+      if(body&&toggle&&getComputedStyle(body).display==='none')toggle.click();
+      var singleBtn=document.getElementById('uploadTabSingleBtn'),batchBtn=document.getElementById('uploadTabBatchBtn');
+      var singlePanel=document.getElementById('uploadTabSingle'),batchPanel=document.getElementById('uploadTabBatch');
+      if(batchBtn&&singleBtn&&batchPanel&&singlePanel){
+        batchBtn.classList.add('active');singleBtn.classList.remove('active');
+        batchBtn.setAttribute('aria-selected','true');singleBtn.setAttribute('aria-selected','false');
+        batchPanel.style.display='block';singlePanel.style.display='none';
+      }
+      setTimeout(function(){
+        target.click();
+      },80);
+    });
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',wireZipShortcut);else wireZipShortcut();
+
+  function wireInstallApp(){
+    if('serviceWorker' in navigator){
+      navigator.serviceWorker.register('sw.js').catch(function(){});
+    }
+    var btn=document.getElementById('installAppBtn');
+    if(!btn)return;
+    var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    if(isStandalone)return;
+    var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    var deferredPrompt = null;
+    window.addEventListener('beforeinstallprompt', function(e){
+      e.preventDefault();
+      deferredPrompt = e;
+      btn.style.display = 'flex';
+    });
+    window.addEventListener('appinstalled', function(){
+      btn.style.display = 'none';
+      deferredPrompt = null;
+    });
+    if(isIOS){
+      btn.style.display = 'flex';
+    }
+    btn.addEventListener('click', async function(){
+      if(deferredPrompt){
+        deferredPrompt.prompt();
+        try{ await deferredPrompt.userChoice; }catch(e){}
+        deferredPrompt = null;
+        btn.style.display = 'none';
+        return;
+      }
+      if(isIOS){
+        alert('Install on iPhone/iPad:\n\n1. Tap the Share icon (square with an arrow) in Safari\'s toolbar.\n2. Scroll down and tap "Add to Home Screen".\n3. Tap "Add".\n\nIt then opens full-screen like a regular app, right from your home screen.');
+        return;
+      }
+      alert('Install:\n\nOpen this page in Chrome, tap the ⋮ menu, then "Install app" (or "Add to Home screen").');
+    });
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',wireInstallApp);else wireInstallApp();
+
+  function wireUploadTabs(){
+    var singleBtn=document.getElementById('uploadTabSingleBtn'),batchBtn=document.getElementById('uploadTabBatchBtn');
+    var singlePanel=document.getElementById('uploadTabSingle'),batchPanel=document.getElementById('uploadTabBatch');
+    if(!singleBtn||!batchBtn)return;
+    function show(which){
+      var toBatch=which==='batch';
+      batchBtn.classList.toggle('active',toBatch);
+      singleBtn.classList.toggle('active',!toBatch);
+      batchBtn.setAttribute('aria-selected',toBatch?'true':'false');
+      singleBtn.setAttribute('aria-selected',toBatch?'false':'true');
+      batchPanel.style.display=toBatch?'block':'none';
+      singlePanel.style.display=toBatch?'none':'block';
+      if(toBatch){
+        var body=document.getElementById('batchPanelBody'),toggle=document.getElementById('batchPanelToggle');
+        if(body&&toggle&&getComputedStyle(body).display==='none')toggle.click();
+      }
+    }
+    singleBtn.addEventListener('click',function(){show('single');});
+    batchBtn.addEventListener('click',function(){show('batch');});
+    var zipShortcut=document.getElementById('qbUploadZipBtn');
+    if(zipShortcut)zipShortcut.addEventListener('click',function(){show('batch');});
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',wireUploadTabs);else wireUploadTabs();
+
+  function wireSettingsDrawer(){
+    var gear=document.getElementById('settingsGearBtn'),overlay=document.getElementById('settingsDrawerOverlay'),close=document.getElementById('settingsDrawerClose');
+    if(!gear||!overlay)return;
+    gear.addEventListener('click',function(){overlay.classList.add('open');});
+    function shut(){overlay.classList.remove('open');}
+    if(close)close.addEventListener('click',shut);
+    overlay.addEventListener('click',function(e){if(e.target===overlay)shut();});
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',wireSettingsDrawer);else wireSettingsDrawer();
+
+  function wireAutoApplySpeed(){
+    var range=document.getElementById('voiceSpeedRange'),apply=document.getElementById('voiceSpeedApplyBtn');
+    if(!range||!apply)return;
+    range.addEventListener('change',function(){apply.click();});
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',wireAutoApplySpeed);else wireAutoApplySpeed();
+
+  function wireTooltipTouch(){
+    document.addEventListener('click',function(e){
+      var dot=e.target.closest?e.target.closest('.info-dot'):null;
+      if(dot){e.preventDefault();dot.focus();}
+    });
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',wireTooltipTouch);else wireTooltipTouch();
+})();</script>
+<script src="app.js" defer></script>
+</body>
+     .
+</html>
+.
